@@ -17,7 +17,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.R
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-
+// alan
 // Define the Note data class
 data class Note(val title: String, val content: String)
 
