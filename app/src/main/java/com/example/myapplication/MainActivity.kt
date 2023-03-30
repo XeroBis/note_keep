@@ -1,6 +1,5 @@
 package com.example.myapplication
 
-
 import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.Context
@@ -92,6 +91,11 @@ class MainActivity : AppCompatActivity() {
                 // Edit the note when it's clicked
                 editNoteAtPosition(position)
             }
+            holder.itemView.setOnLongClickListener {
+                // Delete the note when it's long pressed
+                deleteNoteAtPosition(position)
+                true
+            }
         }
 
         override fun getItemCount(): Int {
@@ -119,4 +123,33 @@ class MainActivity : AppCompatActivity() {
         }
         alertDialogBuilder.show()
     }
+
+    private fun deleteNoteAtPosition(position: Int) {
+        val note = noteList[position]
+        val alertDialogBuilder = AlertDialog.Builder(this)
+        alertDialogBuilder.setTitle("Delete Note")
+        alertDialogBuilder.setMessage("Are you sure you want to delete the note \"$note\"?")
+        alertDialogBuilder.setPositiveButton("Yes") { _, _ ->
+            noteList.removeAt(position)
+            saveNoteListToSharedPreferences(noteList)
+            noteRecyclerView.adapter?.notifyItemRemoved(position)
+            Toast.makeText(this, "Note deleted", Toast.LENGTH_SHORT).show()
+        }
+        alertDialogBuilder.setNegativeButton("No") { dialog, _ ->
+            dialog.cancel()
+        }
+        alertDialogBuilder.show()
+    }
+
+    fun editNote(view: View) {
+        val position = noteRecyclerView.getChildLayoutPosition(view.parent as View)
+        editNoteAtPosition(position)
+    }
+
+    fun deleteNote(view: View) {
+        val position = noteRecyclerView.getChildLayoutPosition(view.parent as View)
+        deleteNoteAtPosition(position)
+    }
+
+
 }
