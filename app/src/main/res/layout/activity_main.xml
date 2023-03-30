@@ -1,19 +1,21 @@
-<!-- activity_main.xml -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <EditText
-        android:id="@+id/note_edit_text"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/note_recycler_view"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Write your note here" />
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
 
     <Button
-        android:id="@+id/save_button"
+        android:id="@+id/add_note_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Save" />
+        android:text="Add Note"
+        android:layout_gravity="center_horizontal"/>
 
 </LinearLayout>
