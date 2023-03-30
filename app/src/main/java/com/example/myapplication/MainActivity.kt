@@ -1,6 +1,7 @@
 package com.example.myapplication
 
 
+import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.Context
 import android.os.Bundle
@@ -14,7 +15,6 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.myapplication.R
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 
@@ -99,6 +99,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     private fun editNoteAtPosition(position: Int) {
         val note = noteList[position]
         val alertDialogBuilder = AlertDialog.Builder(this)
@@ -106,14 +107,14 @@ class MainActivity : AppCompatActivity() {
         val inputEditText = EditText(this)
         inputEditText.setText(note)
         alertDialogBuilder.setView(inputEditText)
-        alertDialogBuilder.setPositiveButton("OK") { dialog, which ->
+        alertDialogBuilder.setPositiveButton("OK") { _, _ ->
             val editedNote = inputEditText.text.toString()
             noteList[position] = editedNote
             saveNoteListToSharedPreferences(noteList)
             noteRecyclerView.adapter?.notifyDataSetChanged()
             Toast.makeText(this, "Note updated", Toast.LENGTH_SHORT).show()
         }
-        alertDialogBuilder.setNegativeButton("Cancel") { dialog, which ->
+        alertDialogBuilder.setNegativeButton("Cancel") { dialog, _ ->
             dialog.cancel()
         }
         alertDialogBuilder.show()
