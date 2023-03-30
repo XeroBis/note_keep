@@ -1,5 +1,6 @@
 package com.example.myapplication
 
+
 import android.app.AlertDialog
 import android.content.Context
 import android.os.Bundle
@@ -13,6 +14,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.myapplication.R
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 
@@ -97,6 +99,11 @@ class MainActivity : AppCompatActivity() {
                 // Edit the note when it's clicked
                 editNoteAtPosition(position)
             }
+            holder.itemView.setOnLongClickListener {
+                // Delete the note when it's long pressed
+                deleteNoteAtPosition(position)
+                true
+            }
         }
 
         override fun getItemCount(): Int {
@@ -130,12 +137,26 @@ class MainActivity : AppCompatActivity() {
             noteRecyclerView.adapter?.notifyDataSetChanged()
             Toast.makeText(this, "Note updated", Toast.LENGTH_SHORT).show()
         }
-
-        alertDialogBuilder.setNegativeButton("Cancel") { dialog, which ->
+        alertDialogBuilder.setNegativeButton("Cancel") { dialog, _ ->
             dialog.cancel()
         }
-
         alertDialogBuilder.show()
     }
 
+    private fun deleteNoteAtPosition(position: Int) {
+        val note = noteList[position]
+        val alertDialogBuilder = AlertDialog.Builder(this)
+        alertDialogBuilder.setTitle("Delete Note")
+        alertDialogBuilder.setMessage("Are you sure you want to delete the note \"$note\"?")
+        alertDialogBuilder.setPositiveButton("Yes") { _, _ ->
+            noteList.removeAt(position)
+            saveNoteListToSharedPreferences(noteList)
+            noteRecyclerView.adapter?.notifyItemRemoved(position)
+            Toast.makeText(this, "Note deleted", Toast.LENGTH_SHORT).show()
+        }
+        alertDialogBuilder.setNegativeButton("No") { dialog, _ ->
+            dialog.cancel()
+        }
+        alertDialogBuilder.show()
+    }
 }

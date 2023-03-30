@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
@@ -27,6 +26,17 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:src="@drawable/ic_edit"
-        android:contentDescription="@string/edit_note"/>
+        android:contentDescription="@string/edit_note"
+        android:onClick="editNote"
+        android:padding="8dp"/>
+
+    <ImageView
+        android:id="@+id/delete_note_image_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_delete"
+        android:contentDescription="@string/delete_note"
+        android:onClick="deleteNote"
+        android:padding="8dp"/>
 
 </LinearLayout>
