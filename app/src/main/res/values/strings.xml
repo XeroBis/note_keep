@@ -1,4 +1,9 @@
 <resources>
     <string name="app_name">My Application</string>
     <string name="edit_note" />
+    <string name="add_note">Add Note</string>
+    <string name="title">Title</string>
+    <string name="enter_title">Enter title</string>
+    <string name="content">Content</string>
+    <string name="enter_content">Enter content</string>
 </resources>

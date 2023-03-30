@@ -1,6 +1,5 @@
 package com.example.myapplication
 
-
 import android.app.AlertDialog
 import android.content.Context
 import android.os.Bundle
@@ -14,16 +13,19 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.myapplication.R
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+
+// Define the Note data class
+data class Note(val title: String, val content: String)
+
 
 // MainActivity.kt
 class MainActivity : AppCompatActivity() {
     private lateinit var noteRecyclerView: RecyclerView
     private lateinit var addNoteButton: Button
 
-    private var noteList = mutableListOf<String>()
+    private var noteList = mutableListOf<Note>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,36 +49,38 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun addNewNote() {
-        val note = "New note"
+        val note = Note("New title", "New content")
         noteList.add(note)
         saveNoteListToSharedPreferences(noteList)
         val adapter = noteRecyclerView.adapter as NoteAdapter
         adapter.notifyItemInserted(noteList.size - 1)
     }
 
-    private fun getNoteListFromSharedPreferences(): MutableList<String> {
+    private fun getNoteListFromSharedPreferences(): MutableList<Note> {
         val sharedPreferences = getSharedPreferences("MyNoteApp", Context.MODE_PRIVATE)
         val json = sharedPreferences.getString("noteList", "")
         return if (json != "") {
-            Gson().fromJson(json, object : TypeToken<MutableList<String>>() {}.type)
+            Gson().fromJson(json, object : TypeToken<MutableList<Note>>() {}.type)
         } else {
             mutableListOf()
         }
     }
 
-    private fun saveNoteListToSharedPreferences(noteList: MutableList<String>) {
+    private fun saveNoteListToSharedPreferences(noteList: MutableList<Note>) {
         val sharedPreferences = getSharedPreferences("MyNoteApp", Context.MODE_PRIVATE)
         val editor = sharedPreferences.edit()
-        val json = Gson().toJson(noteList)
-        editor.putString("noteList", json)
+        val jsonArray = Gson().toJsonTree(noteList).asJsonArray
+        editor.putString("noteList", jsonArray.toString())
         editor.apply()
     }
 
-    inner class NoteAdapter(private val noteList: MutableList<String>) :
+
+    inner class NoteAdapter(private val noteList: MutableList<Note>) :
         RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
 
         inner class NoteViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-            val noteTextView: TextView = itemView.findViewById(R.id.note_text_view)
+            val titleTextView: TextView = itemView.findViewById(R.id.title_text_view)
+            val contentTextView: TextView = itemView.findViewById(R.id.content_text_view)
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NoteViewHolder {
@@ -87,7 +91,8 @@ class MainActivity : AppCompatActivity() {
 
         override fun onBindViewHolder(holder: NoteViewHolder, position: Int) {
             val note = noteList[position]
-            holder.noteTextView.text = note
+            holder.titleTextView.text = note.title
+            holder.contentTextView.text = note.content
             holder.itemView.setOnClickListener {
                 // Edit the note when it's clicked
                 editNoteAtPosition(position)
@@ -103,19 +108,34 @@ class MainActivity : AppCompatActivity() {
         val note = noteList[position]
         val alertDialogBuilder = AlertDialog.Builder(this)
         alertDialogBuilder.setTitle("Edit Note")
-        val inputEditText = EditText(this)
-        inputEditText.setText(note)
-        alertDialogBuilder.setView(inputEditText)
+
+        // Inflate the custom dialog view
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.edit_note_dialog, null)
+
+        // Get references to the EditText views
+        val titleEditText = dialogView.findViewById<EditText>(R.id.title_edit_text)
+        val contentEditText = dialogView.findViewById<EditText>(R.id.content_edit_text)
+
+        // Set the text of the EditText views to the values of the note being edited
+        titleEditText.setText(note.title)
+        contentEditText.setText(note.content)
+
+        alertDialogBuilder.setView(dialogView)
+
         alertDialogBuilder.setPositiveButton("OK") { dialog, which ->
-            val editedNote = inputEditText.text.toString()
-            noteList[position] = editedNote
+            val editedTitle = titleEditText.text.toString()
+            val editedContent = contentEditText.text.toString()
+            noteList[position] = Note(editedTitle, editedContent)
             saveNoteListToSharedPreferences(noteList)
             noteRecyclerView.adapter?.notifyDataSetChanged()
             Toast.makeText(this, "Note updated", Toast.LENGTH_SHORT).show()
         }
+
         alertDialogBuilder.setNegativeButton("Cancel") { dialog, which ->
             dialog.cancel()
         }
+
         alertDialogBuilder.show()
     }
+
 }
