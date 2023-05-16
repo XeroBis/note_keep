@@ -2,24 +2,22 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
+    android:background="@drawable/rounded_border"
+    android:orientation="vertical"
     android:padding="16dp">
 
     <TextView
         android:id="@+id/title_text_view"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
         android:textSize="18sp"/>
 
     <TextView
         android:id="@+id/content_text_view"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:textSize="12sp"/>
-
-
+        android:layout_marginTop="8dp"
+        android:maxLines="10"/>
 
     <ImageView
         android:id="@+id/edit_note_image_view"

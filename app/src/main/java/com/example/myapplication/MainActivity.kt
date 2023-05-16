@@ -3,7 +3,10 @@ package com.example.myapplication
 
 import android.app.AlertDialog
 import android.content.Context
+import android.graphics.Rect
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,9 +17,9 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.myapplication.R
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+
 // alan
 // Define the Note data class
 data class Note(val title: String, val content: String)
@@ -48,14 +51,26 @@ class MainActivity : AppCompatActivity() {
         addNoteButton.setOnClickListener {
             addNewNote()
         }
+
+        // Add space between notes
+        val verticalSpaceBetweenItems = resources.getDimensionPixelSize(R.dimen.vertical_space_between_items)
+        val horizontalSpaceBetweenItems = resources.getDimensionPixelSize(R.dimen.horizontal_space_between_items)
+        noteRecyclerView.addItemDecoration(
+            SpaceItemDecoration(verticalSpaceBetweenItems, horizontalSpaceBetweenItems)
+        )
     }
 
     private fun addNewNote() {
-        val note = Note("New title", "New content")
+        val title = "New title"
+        val content = "New content"
+        val note = Note(title, content)
         noteList.add(note)
         saveNoteListToSharedPreferences(noteList)
         val adapter = noteRecyclerView.adapter as NoteAdapter
         adapter.notifyItemInserted(noteList.size - 1)
+
+        val position = noteList.size - 1
+
     }
 
     private fun getNoteListFromSharedPreferences(): MutableList<Note> {
@@ -96,7 +111,6 @@ class MainActivity : AppCompatActivity() {
             holder.titleTextView.text = note.title
             holder.contentTextView.text = note.content
             holder.itemView.setOnClickListener {
-                // Edit the note when it's clicked
                 editNoteAtPosition(position)
             }
             holder.itemView.setOnLongClickListener {
@@ -110,6 +124,24 @@ class MainActivity : AppCompatActivity() {
             return noteList.size
         }
     }
+
+    class SpaceItemDecoration(
+        private val verticalSpace: Int,
+        private val horizontalSpace: Int
+    ) : RecyclerView.ItemDecoration() {
+
+        override fun getItemOffsets(
+            outRect: Rect,
+            view: View,
+            parent: RecyclerView,
+            state: RecyclerView.State
+        ) {
+            outRect.top = verticalSpace
+            outRect.left = horizontalSpace
+            outRect.right = horizontalSpace
+        }
+    }
+
 
     private fun editNoteAtPosition(position: Int) {
         val note = noteList[position]
@@ -147,7 +179,7 @@ class MainActivity : AppCompatActivity() {
         val note = noteList[position]
         val alertDialogBuilder = AlertDialog.Builder(this)
         alertDialogBuilder.setTitle("Delete Note")
-        alertDialogBuilder.setMessage("Are you sure you want to delete the note \"$note\"?")
+        alertDialogBuilder.setMessage("Are you sure you want to delete the note \"${note.title}\"?")
         alertDialogBuilder.setPositiveButton("Yes") { _, _ ->
             noteList.removeAt(position)
             saveNoteListToSharedPreferences(noteList)
