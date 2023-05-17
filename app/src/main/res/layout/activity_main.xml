@@ -18,4 +18,11 @@
         android:text="@string/add_note"
         android:layout_gravity="center_horizontal"/>
 
+    <Button
+        android:id="@+id/delete_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/delete"
+        android:layout_gravity="end" />
+
 </LinearLayout>

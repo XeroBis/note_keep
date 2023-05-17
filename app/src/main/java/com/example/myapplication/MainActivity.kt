@@ -3,6 +3,7 @@ package com.example.myapplication
 
 import android.app.AlertDialog
 import android.content.Context
+import android.graphics.Color
 import android.graphics.Rect
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -27,8 +28,11 @@ data class Note(val title: String, val content: String)
 class MainActivity : AppCompatActivity() {
     private lateinit var noteRecyclerView: RecyclerView
     private lateinit var addNoteButton: Button
+    private lateinit var deleteButton: Button
 
     private var noteList = mutableListOf<Note>()
+    private val selectedNotes = mutableSetOf<Int>()
+    private lateinit var adapter : NoteAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,18 +40,23 @@ class MainActivity : AppCompatActivity() {
 
         noteRecyclerView = findViewById(R.id.note_recycler_view)
         addNoteButton = findViewById(R.id.add_note_button)
+        deleteButton = findViewById(R.id.delete_button)
 
         // Load the previously saved notes
         noteList = getNoteListFromSharedPreferences()
 
         // Set up the RecyclerView
-        val adapter = NoteAdapter(noteList)
+        adapter = NoteAdapter(noteList)
         noteRecyclerView.adapter = adapter
         noteRecyclerView.layoutManager = LinearLayoutManager(this)
 
         // Add a new note when the add note button is clicked
         addNoteButton.setOnClickListener {
             addNewNote()
+        }
+
+        deleteButton.setOnClickListener {
+            deleteSelectedNotes()
         }
 
         // Add space between notes
@@ -75,8 +84,18 @@ class MainActivity : AppCompatActivity() {
             val adapter = noteRecyclerView.adapter as NoteAdapter
             adapter.notifyItemInserted(noteList.size - 1)
         }
-
     }
+    private fun deleteSelectedNotes() {
+        val sortedPositions = selectedNotes.toList().sortedDescending()
+        for (position in sortedPositions) {
+            noteList.removeAt(position)
+            adapter.notifyItemRemoved(position)
+        }
+        selectedNotes.clear()
+        saveNoteListToSharedPreferences(noteList)
+        Toast.makeText(this@MainActivity, "Notes deleted", Toast.LENGTH_SHORT).show()
+    }
+
 
     private fun getNoteListFromSharedPreferences(): MutableList<Note> {
         val sharedPreferences = getSharedPreferences("MyNoteApp", Context.MODE_PRIVATE)
@@ -100,6 +119,8 @@ class MainActivity : AppCompatActivity() {
     inner class NoteAdapter(private val noteList: MutableList<Note>) :
         RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
 
+        private lateinit var adapter: NoteAdapter
+
         inner class NoteViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
             val titleTextView: TextView = itemView.findViewById(R.id.title_text_view)
             val contentTextView: TextView = itemView.findViewById(R.id.content_text_view)
@@ -115,13 +136,34 @@ class MainActivity : AppCompatActivity() {
             val note = noteList[position]
             holder.titleTextView.text = note.title
             holder.contentTextView.text = note.content
+
             holder.itemView.setOnClickListener {
                 editNoteAtPosition(position)
             }
+
             holder.itemView.setOnLongClickListener {
                 // Delete the note when it's long pressed
-                deleteNoteAtPosition(position)
+                toggleNoteSelection(holder, position)
                 true
+            }
+
+            if (selectedNotes.contains(position)) {
+                holder.itemView.setBackgroundColor(Color.LTGRAY)
+            } else {
+                holder.itemView.setBackgroundColor(Color.WHITE)
+            }
+
+        }
+
+        private fun toggleNoteSelection(holder: NoteViewHolder, position: Int) {
+            if (selectedNotes.contains(position)) {
+                selectedNotes.remove(position)
+                // Deselect the note
+                holder.itemView.setBackgroundColor(Color.WHITE)
+            } else {
+                selectedNotes.add(position)
+                // Select the note
+                holder.itemView.setBackgroundColor(Color.LTGRAY)
             }
         }
 
@@ -147,8 +189,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
-
     private fun editNoteAtPosition(position: Int) {
         val note = noteList[position]
         val alertDialogBuilder = AlertDialog.Builder(this)
@@ -167,7 +207,7 @@ class MainActivity : AppCompatActivity() {
 
         alertDialogBuilder.setView(dialogView)
 
-        alertDialogBuilder.setPositiveButton("OK") { dialog, which ->
+        alertDialogBuilder.setPositiveButton("OK") { _, _ ->
             val editedTitle = titleEditText.text.toString()
             val editedContent = contentEditText.text.toString()
             noteList[position] = Note(editedTitle, editedContent)
@@ -182,20 +222,4 @@ class MainActivity : AppCompatActivity() {
         alertDialogBuilder.show()
     }
 
-    private fun deleteNoteAtPosition(position: Int) {
-        val note = noteList[position]
-        val alertDialogBuilder = AlertDialog.Builder(this)
-        alertDialogBuilder.setTitle("Delete Note")
-        alertDialogBuilder.setMessage("Are you sure you want to delete the note \"${note.title}\"?")
-        alertDialogBuilder.setPositiveButton("Yes") { _, _ ->
-            noteList.removeAt(position)
-            saveNoteListToSharedPreferences(noteList)
-            noteRecyclerView.adapter?.notifyItemRemoved(position)
-            Toast.makeText(this, "Note deleted", Toast.LENGTH_SHORT).show()
-        }
-        alertDialogBuilder.setNegativeButton("No") { dialog, _ ->
-            dialog.cancel()
-        }
-        alertDialogBuilder.show()
-    }
 }

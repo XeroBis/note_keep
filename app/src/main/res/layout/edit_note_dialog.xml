@@ -1,4 +1,5 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
@@ -14,9 +15,11 @@
         android:id="@+id/title_edit_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="@string/enter_title"
         android:autofillHints=""
-        android:inputType="text" />
+        android:hint="@string/enter_title"
+        android:inputType="text"
+        android:minHeight="48dp"
+        tools:ignore="VisualLintTextFieldSize" />
 
     <TextView
         android:id="@+id/content_label"
@@ -29,8 +32,10 @@
         android:id="@+id/content_edit_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="@string/enter_content"
         android:autofillHints=""
-        android:inputType="textMultiLine" />
+        android:hint="@string/enter_content"
+        android:inputType="textMultiLine"
+        android:minHeight="48dp"
+        tools:ignore="VisualLintTextFieldSize" />
 
 </LinearLayout>
