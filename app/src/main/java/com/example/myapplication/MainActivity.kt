@@ -59,14 +59,23 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun addNewNote() {
-        val lastnote = noteList.last()
-        if (lastnote.title != "New Title" && lastnote.content != "New Content") {
+        if (noteList.isNotEmpty()){
+            val lastnote = noteList.last()
+            if (lastnote.title != "New Title" && lastnote.content != "New Content") {
+                val note = Note("New Title", "New Content")
+                noteList.add(note)
+                saveNoteListToSharedPreferences(noteList)
+                val adapter = noteRecyclerView.adapter as NoteAdapter
+                adapter.notifyItemInserted(noteList.size - 1)
+            }
+        } else {
             val note = Note("New Title", "New Content")
             noteList.add(note)
             saveNoteListToSharedPreferences(noteList)
             val adapter = noteRecyclerView.adapter as NoteAdapter
             adapter.notifyItemInserted(noteList.size - 1)
         }
+
     }
 
     private fun getNoteListFromSharedPreferences(): MutableList<Note> {
