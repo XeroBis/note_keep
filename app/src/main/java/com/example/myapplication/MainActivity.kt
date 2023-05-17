@@ -5,8 +5,6 @@ import android.app.AlertDialog
 import android.content.Context
 import android.graphics.Rect
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -61,16 +59,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun addNewNote() {
-        val title = "New title"
-        val content = "New content"
-        val note = Note(title, content)
-        noteList.add(note)
-        saveNoteListToSharedPreferences(noteList)
-        val adapter = noteRecyclerView.adapter as NoteAdapter
-        adapter.notifyItemInserted(noteList.size - 1)
-
-        val position = noteList.size - 1
-
+        val lastnote = noteList.last()
+        if (lastnote.title != "New Title" && lastnote.content != "New Content") {
+            val note = Note("New Title", "New Content")
+            noteList.add(note)
+            saveNoteListToSharedPreferences(noteList)
+            val adapter = noteRecyclerView.adapter as NoteAdapter
+            adapter.notifyItemInserted(noteList.size - 1)
+        }
     }
 
     private fun getNoteListFromSharedPreferences(): MutableList<Note> {
@@ -143,6 +139,7 @@ class MainActivity : AppCompatActivity() {
     }
 
 
+
     private fun editNoteAtPosition(position: Int) {
         val note = noteList[position]
         val alertDialogBuilder = AlertDialog.Builder(this)
@@ -166,7 +163,8 @@ class MainActivity : AppCompatActivity() {
             val editedContent = contentEditText.text.toString()
             noteList[position] = Note(editedTitle, editedContent)
             saveNoteListToSharedPreferences(noteList)
-            noteRecyclerView.adapter?.notifyDataSetChanged()
+            //noteRecyclerView.adapter?.notifyDataSetChanged()
+            noteRecyclerView.adapter?.notifyItemChanged(position)
             Toast.makeText(this, "Note updated", Toast.LENGTH_SHORT).show()
         }
         alertDialogBuilder.setNegativeButton("Cancel") { dialog, _ ->
