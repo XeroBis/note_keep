@@ -3,8 +3,8 @@ package com.example.myapplication
 
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
 import android.graphics.Rect
+import android.os.Build
 import android.os.Bundle
 import android.os.Parcel
 import android.os.Parcelable
@@ -12,6 +12,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.CheckBox
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.ActivityResult
@@ -22,9 +23,32 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 
-// alan
+
+data class Position(val id:Int) : Parcelable {
+    constructor(parcel : Parcel) : this(
+        parcel.readInt()
+    )
+
+    override fun writeToParcel(parcel: Parcel, flags: Int) {
+        parcel.writeInt(id)
+    }
+
+    override fun describeContents(): Int {
+        return 0
+    }
+
+    companion object CREATOR : Parcelable.Creator<Position> {
+        override fun createFromParcel(parcel: Parcel): Position {
+            return Position(parcel)
+        }
+
+        override fun newArray(size: Int): Array<Position?> {
+            return arrayOfNulls(size)
+        }
+    }
+}
 // Define the Note data class
-data class Note(val title: String?, val content: String? ) : Parcelable {
+data class Note(val title: String?, val content: String?, var selected:Boolean = false) : Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readString(),
         parcel.readString()
@@ -61,21 +85,28 @@ class MainActivity : AppCompatActivity() {
     private val selectedNotes = mutableSetOf<Int>()
     private lateinit var adapter : NoteAdapter
 
-    private val REQUEST_CODE_NOTE_DETAIL = 1
 
     private val startForResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
             result : ActivityResult ->
         if (result.resultCode == RESULT_OK) {
-            Toast.makeText(this@MainActivity, "Note: notes", Toast.LENGTH_SHORT).show()
-            val note = result.data?.getParcelableExtra<Note>("note")
-            if (note != null) {
-                // Use the returned note object here
-                noteList.add(note)
-                saveNoteListToSharedPreferences(noteList)
-                val adapter = noteRecyclerView.adapter as NoteAdapter
-                adapter.notifyItemInserted(noteList.size - 1)
-                Toast.makeText(this@MainActivity, "Note: ${note.title}, ${note.content}", Toast.LENGTH_SHORT).show()
+            val note = if (Build.VERSION.SDK_INT >= 33) {
+                result.data?.getBundleExtra("extra")?.getParcelable("note", Note::class.java)!!
+
+            } else {
+                result.data?.getBundleExtra("extra")?.getParcelable("note")!!
             }
+
+            val id = if (Build.VERSION.SDK_INT >= 33) {
+                result.data?.getBundleExtra("extra")?.getParcelable("id", Position::class.java)!!
+            } else {
+                result.data?.getBundleExtra("extra")?.getParcelable("id")!!
+            }
+            // Use the returned note object here
+            noteList[id.id] = note
+            saveNoteListToSharedPreferences(noteList)
+            val adapter = noteRecyclerView.adapter as NoteAdapter
+            adapter.notifyItemChanged(id.id)
+            Toast.makeText(this@MainActivity, "Note: ${note.title}, ${note.content}", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -100,7 +131,7 @@ class MainActivity : AppCompatActivity() {
         addNoteButton.setOnClickListener {
             //addNewNote()
             val note = Note("Title", "Sample Content")
-            openNoteDetailActivity(note)
+            addNoteDetailActivity(note)
         }
 
         deleteButton.setOnClickListener {
@@ -114,17 +145,58 @@ class MainActivity : AppCompatActivity() {
             SpaceItemDecoration(verticalSpaceBetweenItems, horizontalSpaceBetweenItems)
         )
     }
+
+
+    private fun addNoteDetailActivity(note: Note){
+        if (noteList.isNotEmpty()) {
+            val lastnote = noteList.last()
+            if (lastnote.title !="Title" && lastnote.content != "Sample Content") {
+                startForResult.launch(Intent(this, NoteDetailActivity::class.java).apply {
+                    noteList.add(note)
+                    val position = noteList.indexOf(note)
+                    val extras = Bundle()
+                    extras.putParcelable("note", note)
+                    extras.putParcelable("id", Position(position))
+                    putExtra("extra", extras)
+                })
+            } else {
+                Toast.makeText(this@MainActivity, "Dernières Notes non modifiés", Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            startForResult.launch(Intent(this, NoteDetailActivity::class.java).apply {
+                noteList.add(note)
+                val position = noteList.indexOf(note)
+                val extras = Bundle()
+                extras.putParcelable("note", note)
+                extras.putParcelable("id", Position(position))
+                putExtra("extra", extras)
+            })
+        }
+
+    }
     private fun openNoteDetailActivity(note: Note) {
         startForResult.launch(Intent(this, NoteDetailActivity::class.java).apply {
-            putExtra("note", note)
+            val position = noteList.indexOf(note)
+            val extras = Bundle()
+            extras.putParcelable("note", note)
+            extras.putParcelable("id", Position(position))
+            putExtra("extra", extras)
         })
     }
     private fun deleteSelectedNotes() {
-        val sortedPositions = selectedNotes.toList().sortedDescending()
-        for (position in sortedPositions) {
+        val selectedPositions = mutableListOf<Int>()
+        for ((index, note) in noteList.withIndex()) {
+            if (note.selected) {
+                selectedPositions.add(index)
+            }
+        }
+        // Remove the selected notes from the list
+        for (position in selectedPositions.reversed()) {
             noteList.removeAt(position)
             adapter.notifyItemRemoved(position)
+            adapter.notifyItemRangeChanged(position, noteList.size)
         }
+        // Clear the selection
         selectedNotes.clear()
         saveNoteListToSharedPreferences(noteList)
         Toast.makeText(this@MainActivity, "Notes deleted", Toast.LENGTH_SHORT).show()
@@ -152,8 +224,6 @@ class MainActivity : AppCompatActivity() {
     inner class NoteAdapter(private val noteList: List<Note>, private val onItemClick: (Note) -> Unit) :
         RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
 
-        private lateinit var adapter: NoteAdapter
-
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NoteViewHolder {
             val itemView = LayoutInflater.from(parent.context)
                 .inflate(R.layout.note_item, parent, false)
@@ -165,26 +235,6 @@ class MainActivity : AppCompatActivity() {
             holder.bind(note)
             holder.titleTextView.text = note.title
             holder.contentTextView.text = note.content
-
-            holder.itemView.setOnLongClickListener {
-                // Delete the note when it's long pressed
-                toggleNoteSelection(holder, position)
-                true
-            }
-
-        }
-
-        private fun toggleNoteSelection(holder: NoteViewHolder, position: Int) {
-            if (selectedNotes.contains(position)) {
-                selectedNotes.remove(position)
-                // Deselect the note R.id.note_recycler_view
-
-                holder.itemView.setBackgroundColor(Color.TRANSPARENT);
-            } else {
-                selectedNotes.add(position)
-                // Select the note
-                holder.itemView.setBackgroundColor(Color.LTGRAY)
-            }
         }
 
         override fun getItemCount(): Int {
@@ -192,8 +242,9 @@ class MainActivity : AppCompatActivity() {
         }
 
         inner class NoteViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-            public val titleTextView: TextView = itemView.findViewById(R.id.title_text_view)
-            public val contentTextView: TextView = itemView.findViewById(R.id.content_text_view)
+            val titleTextView: TextView = itemView.findViewById(R.id.title_text_view)
+            val contentTextView: TextView = itemView.findViewById(R.id.content_text_view)
+            val selectedCheckBox: CheckBox = itemView.findViewById(R.id.selected_checkbox)
 
             init {
                 itemView.setOnClickListener {
@@ -203,25 +254,39 @@ class MainActivity : AppCompatActivity() {
                         onItemClick(note)
                     }
                 }
+                itemView.setOnLongClickListener {
+                    val position = adapterPosition
+                    if (position != RecyclerView.NO_POSITION) {
+                        val note = noteList[position]
+                        note.selected = !note.selected
+                        if (note.selected) {
+                            selectedNotes.add(position)
+                        } else {
+                            selectedNotes.remove(position)
+                        }
+                        selectedCheckBox.isChecked = note.selected
+                        notifyItemChanged(position)
+                        true
+                    } else {
+                        false
+                    }
+                }
             }
 
             fun bind(note: Note) {
                 titleTextView.text = note.title
                 contentTextView.text = note.content
+                selectedCheckBox.isChecked = note.selected
+                selectedCheckBox.visibility = if (note.selected) View.VISIBLE else View.GONE
             }
         }
     }
-    class SpaceItemDecoration(
-        private val verticalSpace: Int,
-        private val horizontalSpace: Int
-    ) : RecyclerView.ItemDecoration() {
-
+    class SpaceItemDecoration(private val verticalSpace: Int, private val horizontalSpace: Int) : RecyclerView.ItemDecoration() {
         override fun getItemOffsets(
             outRect: Rect,
             view: View,
             parent: RecyclerView,
-            state: RecyclerView.State
-        ) {
+            state: RecyclerView.State) {
             outRect.top = verticalSpace
             outRect.left = horizontalSpace
             outRect.right = horizontalSpace

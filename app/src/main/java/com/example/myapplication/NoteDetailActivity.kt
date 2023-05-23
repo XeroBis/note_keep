@@ -21,10 +21,17 @@ class NoteDetailActivity : AppCompatActivity() {
 
         // Retrieve the Note object from the intent
         val note = if (Build.VERSION.SDK_INT >= 33) {
-            intent.getParcelableExtra("note", Note::class.java)!!
+            intent.getBundleExtra("extra")?.getParcelable("note",  Note::class.java)!!
         } else {
-            intent.getParcelableExtra<Note>("note")!!
+            intent.getBundleExtra("extra")?.getParcelable("note")!!
         }
+        // Retrieve the Note object from the intent
+        val position = if (Build.VERSION.SDK_INT >= 33) {
+            intent.getBundleExtra("extra")?.getParcelable("id",  Position::class.java)!!
+        } else {
+            intent.getBundleExtra("extra")?.getParcelable("id")!!
+        }
+
         // Populate the views with the data from the Note object
         note.let {
             titleEditText.setText(it.title)
@@ -32,11 +39,10 @@ class NoteDetailActivity : AppCompatActivity() {
         }
         val saveButton = findViewById<Button>(R.id.save_note_button)
         saveButton.setOnClickListener {
-
-            saveNote()
+            saveNote(position)
         }
     }
-    private fun saveNote() {
+    private fun saveNote(position:Position) {
         val title = titleEditText.text.toString()
         val content = contentEditText.text.toString()
 
@@ -46,7 +52,10 @@ class NoteDetailActivity : AppCompatActivity() {
         //}
         //Toast.makeText(this, "Save button clicked${note.content}", Toast.LENGTH_SHORT).show()
         val intent = Intent()
-        intent.putExtra("note", note)
+        val extras = Bundle()
+        extras.putParcelable("note", note)
+        extras.putParcelable("id", position)
+        intent.putExtra("extra", extras)
 
         setResult(RESULT_OK, intent)
         finish()
