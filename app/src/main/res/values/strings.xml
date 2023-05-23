@@ -7,5 +7,6 @@
     <string name="content">Content</string>
     <string name="enter_content">Enter content</string>
     <string name="delete_note" />
+    <string name="save_note">Save  Note</string>
     <string name="delete">Delete</string>
 </resources>
