@@ -147,7 +147,6 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
-
     private fun addNoteDetailActivity(note: Note){
         if (noteList.isNotEmpty()) {
             val lastnote = noteList.last()
@@ -175,6 +174,7 @@ class MainActivity : AppCompatActivity() {
         }
 
     }
+
     private fun openNoteDetailActivity(note: Note) {
         startForResult.launch(Intent(this, NoteDetailActivity::class.java).apply {
             val position = noteList.indexOf(note)
@@ -184,6 +184,7 @@ class MainActivity : AppCompatActivity() {
             putExtra("extra", extras)
         })
     }
+
     private fun deleteSelectedNotes() {
         val selectedPositions = mutableListOf<Int>()
         for ((index, note) in noteList.withIndex()) {
@@ -208,7 +209,6 @@ class MainActivity : AppCompatActivity() {
         saveNoteListToSharedPreferences(noteList)
 
     }
-
 
     private fun getNoteListFromSharedPreferences(): MutableList<Note> {
         val sharedPreferences = getSharedPreferences("MyNoteApp", Context.MODE_PRIVATE)
@@ -254,11 +254,51 @@ class MainActivity : AppCompatActivity() {
             private val selectedCheckBox: CheckBox = itemView.findViewById(R.id.selected_checkbox)
 
             init {
+                selectedCheckBox.setOnClickListener{
+                    val position = adapterPosition
+
+                    if (position != RecyclerView.NO_POSITION) {
+                        if (selectedCheckBox.isChecked) {
+                            selectedCheckBox.visibility = View.VISIBLE
+                        } else {
+                            selectedCheckBox.visibility = View.INVISIBLE
+                        }
+                        if (selectedCheckBox.isChecked != noteList[position].selected) {
+                            noteList[position].selected = selectedCheckBox.isChecked
+                            if (selectedCheckBox.isChecked){
+                                selectedNotes.add(position)
+                            } else {
+                                selectedNotes.remove(position)
+                            }
+                            if (selectedNotes.isNotEmpty()){
+                                deleteButton.visibility = View.VISIBLE
+                            } else {
+                                deleteButton.visibility = View.INVISIBLE
+                            }
+                        }
+                    }
+
+                }
                 itemView.setOnClickListener {
                     val position = adapterPosition
+
                     if (position != RecyclerView.NO_POSITION) {
                         val note = noteList[position]
-                        onItemClick(note)
+                        if (selectedCheckBox.isChecked != noteList[position].selected) {
+                            noteList[position].selected = selectedCheckBox.isChecked
+                            if (selectedCheckBox.isChecked){
+                                selectedNotes.add(position)
+                            } else {
+                                selectedNotes.remove(position)
+                            }
+                            if (selectedNotes.isNotEmpty()){
+                                deleteButton.visibility = View.VISIBLE
+                            } else {
+                                deleteButton.visibility = View.INVISIBLE
+                            }
+                        } else {
+                            onItemClick(note)
+                        }
                     }
                 }
                 itemView.setOnLongClickListener {

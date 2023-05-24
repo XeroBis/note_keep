@@ -3,9 +3,13 @@ package com.example.myapplication
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.internal.ContextUtils.getActivity
+
 
 class NoteDetailActivity : AppCompatActivity() {
 
@@ -15,9 +19,10 @@ class NoteDetailActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_note_detail)
-
         titleEditText = findViewById(R.id.note_title_textview)
         contentEditText = findViewById(R.id.note_content_textview)
+
+        supportActionBar?.hide()
 
         // Retrieve the Note object from the intent
         val note = if (Build.VERSION.SDK_INT >= 33) {
@@ -37,6 +42,11 @@ class NoteDetailActivity : AppCompatActivity() {
             titleEditText.setText(it.title)
             contentEditText.setText(it.content)
         }
+        val backButton = findViewById<ImageButton>(R.id.back_button)
+        backButton.setOnClickListener{
+            saveNote(position)
+        }
+
         val saveButton = findViewById<Button>(R.id.save_note_button)
         saveButton.setOnClickListener {
             saveNote(position)
@@ -60,4 +70,5 @@ class NoteDetailActivity : AppCompatActivity() {
         setResult(RESULT_OK, intent)
         finish()
     }
+
 }

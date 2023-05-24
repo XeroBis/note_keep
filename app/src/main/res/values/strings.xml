@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">My Application</string>
+    <string name="app_name">Note ++</string>
     <string name="edit_note" />
     <string name="add_note">Add Note</string>
     <string name="title">Title</string>
@@ -9,4 +9,5 @@
     <string name="delete_note" />
     <string name="save_note">Save  Note</string>
     <string name="delete">Delete</string>
+    <string name="back">go back</string>
 </resources>
