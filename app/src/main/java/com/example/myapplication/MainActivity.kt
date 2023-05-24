@@ -106,7 +106,7 @@ class MainActivity : AppCompatActivity() {
             saveNoteListToSharedPreferences(noteList)
             val adapter = noteRecyclerView.adapter as NoteAdapter
             adapter.notifyItemChanged(id.id)
-            Toast.makeText(this@MainActivity, "Note: ${note.title}, ${note.content}", Toast.LENGTH_SHORT).show()
+            //Toast.makeText(this@MainActivity, "Note: ${note.title}, ${note.content}", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -117,6 +117,7 @@ class MainActivity : AppCompatActivity() {
         noteRecyclerView = findViewById(R.id.note_recycler_view)
         addNoteButton = findViewById(R.id.add_note_button)
         deleteButton = findViewById(R.id.delete_button)
+        deleteButton.visibility = View.INVISIBLE
 
         // Load the previously saved notes
         noteList = getNoteListFromSharedPreferences()
@@ -130,7 +131,7 @@ class MainActivity : AppCompatActivity() {
         // Add a new note when the add note button is clicked
         addNoteButton.setOnClickListener {
             //addNewNote()
-            val note = Note("Title", "Sample Content")
+            val note = Note("", "")
             addNoteDetailActivity(note)
         }
 
@@ -150,7 +151,7 @@ class MainActivity : AppCompatActivity() {
     private fun addNoteDetailActivity(note: Note){
         if (noteList.isNotEmpty()) {
             val lastnote = noteList.last()
-            if (lastnote.title !="Title" && lastnote.content != "Sample Content") {
+            if (lastnote.title !="" && lastnote.content != "") {
                 startForResult.launch(Intent(this, NoteDetailActivity::class.java).apply {
                     noteList.add(note)
                     val position = noteList.indexOf(note)
@@ -160,7 +161,7 @@ class MainActivity : AppCompatActivity() {
                     putExtra("extra", extras)
                 })
             } else {
-                Toast.makeText(this@MainActivity, "Dernières Notes non modifiés", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@MainActivity, "Last Note not modified", Toast.LENGTH_SHORT).show()
             }
         } else {
             startForResult.launch(Intent(this, NoteDetailActivity::class.java).apply {
@@ -196,10 +197,16 @@ class MainActivity : AppCompatActivity() {
             adapter.notifyItemRemoved(position)
             adapter.notifyItemRangeChanged(position, noteList.size)
         }
+
+        if (selectedNotes.isNotEmpty()){
+            Toast.makeText(this@MainActivity, "Deleted", Toast.LENGTH_SHORT).show()
+        }
         // Clear the selection
         selectedNotes.clear()
+        deleteButton.visibility = View.INVISIBLE
+
         saveNoteListToSharedPreferences(noteList)
-        Toast.makeText(this@MainActivity, "Notes deleted", Toast.LENGTH_SHORT).show()
+
     }
 
 
@@ -244,7 +251,7 @@ class MainActivity : AppCompatActivity() {
         inner class NoteViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
             val titleTextView: TextView = itemView.findViewById(R.id.title_text_view)
             val contentTextView: TextView = itemView.findViewById(R.id.content_text_view)
-            val selectedCheckBox: CheckBox = itemView.findViewById(R.id.selected_checkbox)
+            private val selectedCheckBox: CheckBox = itemView.findViewById(R.id.selected_checkbox)
 
             init {
                 itemView.setOnClickListener {
@@ -263,6 +270,11 @@ class MainActivity : AppCompatActivity() {
                             selectedNotes.add(position)
                         } else {
                             selectedNotes.remove(position)
+                        }
+                        if (selectedNotes.isNotEmpty()){
+                            deleteButton.visibility = View.VISIBLE
+                        } else {
+                            deleteButton.visibility = View.INVISIBLE
                         }
                         selectedCheckBox.isChecked = note.selected
                         notifyItemChanged(position)
