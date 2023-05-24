@@ -1,27 +1,30 @@
-<LinearLayout
+<RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@drawable/rounded_border"
-    android:orientation="vertical"
     android:padding="16dp">
 
     <CheckBox
         android:id="@+id/selected_checkbox"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true"
         android:visibility="gone"/>
 
     <TextView
         android:id="@+id/title_text_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_toStartOf="@id/selected_checkbox"
         android:textSize="18sp"/>
 
     <TextView
         android:id="@+id/content_text_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_below="@id/title_text_view"
         android:layout_marginTop="8dp"
         android:maxLines="10"/>
 
@@ -29,6 +32,8 @@
         android:id="@+id/edit_note_image_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_below="@id/content_text_view"
+        android:layout_alignParentStart="true"
         android:src="@drawable/ic_edit"
         android:contentDescription="@string/edit_note"
         android:onClick="editNote"
@@ -38,9 +43,11 @@
         android:id="@+id/delete_note_image_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_below="@id/content_text_view"
+        android:layout_alignParentEnd="true"
         android:src="@drawable/ic_delete"
         android:contentDescription="@string/delete_note"
         android:onClick="deleteNote"
         android:padding="8dp"/>
 
-</LinearLayout>
+</RelativeLayout>
